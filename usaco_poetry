@@ -1,0 +1,107 @@
+#include <fstream>
+#include <algorithm>
+#include <vector>
+#include <cassert>
+#include <cmath>
+#include <stack>
+#include <set>
+#include <functional>
+#include <bitset>
+#include <map>
+#include <unordered_map>
+#include <queue>
+#include <array>
+using namespace std;
+template<typename A, typename B> ostream& operator<<(ostream &os, const pair<A, B> &p) { return os << '(' << p.first << ", " << p.second << ')'; }
+template<typename A> ostream& operator<<(ostream &os, vector<A>&a) { for(auto &c:a)os<<c<<' '; return os;}
+template<typename A> istream& operator>>(istream  &os, vector<A>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,size_t N> istream& operator>>(istream &os, array<A,N>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,typename B> istream& operator>>(istream  &os, pair<A,B>&a) { os>>a.first>>a.second; return os;}
+#define bug(a) cerr << "(" << #a << ": " << a << ")\n";
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define PQ priority_queue
+#define pii pair<int,int>
+using i64= int64_t;
+using i16= int16_t;
+using u64= uint64_t;
+using u32= uint32_t;
+using i32= int32_t;
+using u16= uint16_t;
+const i32 inf=1e9;
+const i64 INF=1e18;
+const int mod=1e9+7;
+#define int i64
+template<typename T>void _min(T &x,const T&y){if(y<x)x=y;}
+template<typename T>void _max(T &x,const T&y){if(y>x)x=y;}
+int pw(int a,int p)
+{
+    int rez=1;
+    while(p)
+    {
+        if(p%2)
+            rez=(1LL*rez*a)%mod;
+        a=(a*a)%mod;
+        p>>=1;
+    }
+    return rez;
+}
+ifstream cin("poetry.in");
+ofstream cout("poetry.out");
+void solve()
+{
+    int n,m,k;
+    cin>>n>>m>>k;
+    vector<pii>g(n);
+    cin>>g;
+    vector<int>cnt(26,0);
+    for(int i=0;i<m;i++)
+    {
+        cin.get();
+        char ch=cin.get();
+        cnt[ch-'A']++;
+    }
+    vector<int>dp(k,0);
+    dp[0]=1;
+    for(int i=1;i<k;i++)
+    {
+        for(auto &c:g)
+        {
+            if(i-c.first>=0)
+                dp[i]=(dp[i]+dp[i-c.first])%mod;
+        }
+    }
+    vector<int>v(n,0);
+    for(auto &c:g)
+    {
+        v[c.second-1]=(v[c.second-1]+dp[k-c.first])%mod;
+    }
+    int sol=1;
+    for(auto &c:cnt)
+    {
+        if(c==0)continue;
+        int rez=0;
+        for(auto &c2:v)
+        {
+            rez=(rez+pw(c2,c))%mod;
+        }
+        sol=(1LL*sol*rez)%mod;
+    }
+    cout<<sol;
+}
+main()
+{
+    auto sol=[&](bool x)
+    {
+        if(x)return "YES\n";
+        return "NO\n";
+    };
+    i32 tt=1;
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    //cin>>tt;
+    while(tt--)
+    {
+        solve();
+    }
+}
