@@ -1,3 +1,4 @@
+#include <fstream>
 #include <algorithm>
 #include <vector>
 #include <cassert>
@@ -40,7 +41,7 @@ string yn(bool x){if(x)return "YES";return "NO";}
 class DSU
 {
     vector<int>t;
-    size_t sz=0;
+    int sz=0;
     int root(int x)
     {
         if(t[x]!=x)
@@ -71,7 +72,7 @@ public:
                 unite(c,x);
         }
     }
-    size_t size()
+    int size()
     {
         return sz;
     }
@@ -84,7 +85,7 @@ void solve()
     int n,m;
     cin>>n>>m;
     vector<vector<int>>g(n);
-    for(size_t i=0;i<m;i++)
+    for(int i=0;i<m;i++)
     {
         int x,y;
         cin>>x>>y;
@@ -100,7 +101,7 @@ void solve()
         c--;
     DSU dsu(n);
     vector<bool>rez(n);
-    for(size_t i=n-1;i<n;i--)
+    for(int i=n-1;i>=0;i--)
     {
         dsu.add(a[i],g[a[i]]);
         rez[i]=dsu.size()==1;
