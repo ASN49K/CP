@@ -1,0 +1,115 @@
+#include <fstream>
+#include <algorithm>
+#include <vector>
+#include <cassert>
+#include <cmath>
+#include <stack>
+#include <set>
+#include <functional>
+#include <bitset>
+#include <map>
+#include <unordered_map>
+#include <queue>
+#include <array>
+#include <numeric>
+using namespace std;
+template<typename A, typename B> ostream& operator<<(ostream &os, const pair<A, B> &p) { return os << '(' << p.first << ", " << p.second << ')'; }
+template<typename A> ostream& operator<<(ostream &os, vector<A>&a) { for(auto &c:a)os<<c<<' '; return os;}
+template<typename A> istream& operator>>(istream  &os, vector<A>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,size_t N> istream& operator>>(istream &os, array<A,N>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,typename B> istream& operator>>(istream  &os, pair<A,B>&a) { os>>a.first>>a.second; return os;}
+#define bug(a) cerr << "(" << #a << ": " << a << ")\n";
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define lb lower_bound
+#define ub upper_bound
+#define PQ priority_queue
+using pii= pair<int,int>;
+using VI= vector<int>;
+using v64= vector<int64_t>;
+using i64= int64_t;
+using i16= int16_t;
+using u64= uint64_t;
+using u32= uint32_t;
+using i32= int32_t;
+using u16= uint16_t;
+const i32 inf=1e9;
+const i64 INF=1e18;
+const int mod=1e9+7;
+const int sigma=26;
+string yn(bool x){if(x)return "YES";return "NO";}
+
+
+class DSU
+{
+    vector<int>t;
+    int root(int x)
+    {
+        if(t[x]!=x)
+            t[x]=root(t[x]);
+        return t[x];
+    }
+public:
+    DSU(int n)
+    {
+        t.resize(n);
+        iota(all(t),0);
+    }
+    void unite(int x,int y)
+    {
+        x=root(x);
+        y=root(y);
+        if(x==y)
+            return;
+        t[y]=x;
+    }
+    bool same(int x,int y)
+    {
+        return root(x)==root(y);
+    }
+};
+ifstream cin("wormsort.in");
+ofstream cout("wormsort.out");
+void solve()
+{
+   int n,m;
+   cin>>n>>m;
+   vector<array<int,3>>muchi(m);
+   vector<int>a(n);
+   cin>>a>>muchi;
+   for(auto &c:a)
+        c--;
+   for(auto &c:muchi)
+   {
+        c[0]--;
+        c[1]--;
+   }
+   sort(all(muchi),[](array<int,3>&a,array<int,3>&b){
+       return a[2]<b[2];
+    });
+    int it=m;
+    DSU dsu(n);
+    for(int i=0;i<n;i++)
+    {
+        while(it>0 && !dsu.same(i,a[i]))
+        {
+            it--;
+            dsu.unite(muchi[it][0],muchi[it][1]);
+        }
+    }
+    if(it!=m)cout<<muchi[it][2];
+    else cout<<-1;
+
+
+}
+main()
+{
+    i32 tt=1;
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    //cin>>tt;
+    while(tt--)
+    {
+        solve();
+    }
+}
