@@ -1,0 +1,122 @@
+#include <algorithm>
+#include <vector>
+#include <cassert>
+#include <cmath>
+#include <stack>
+#include <set>
+#include <functional>
+#include <bitset>
+#include <map>
+#include <unordered_map>
+#include <queue>
+#include <array>
+#include <numeric>
+using namespace std;
+template<typename A, typename B> ostream& operator<<(ostream &os, const pair<A, B> &p) { return os << '(' << p.first << ", " << p.second << ')'; }
+template<typename A> ostream& operator<<(ostream &os, vector<A>&a) { for(auto &c:a)os<<c<<' '; return os;}
+template<typename A> istream& operator>>(istream  &os, vector<A>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,size_t N> istream& operator>>(istream &os, array<A,N>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,typename B> istream& operator>>(istream  &os, pair<A,B>&a) { os>>a.first>>a.second; return os;}
+#define bug(a) cerr << "(" << #a << ": " << a << ")\n";
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define lb lower_bound
+#define ub upper_bound
+#define PQ priority_queue
+using pii= pair<int,int>;
+using VI= vector<int>;
+using v64= vector<int64_t>;
+using i64= int64_t;
+using i16= int16_t;
+using u64= uint64_t;
+using u32= uint32_t;
+using i32= int32_t;
+using u16= uint16_t;
+const i32 inf=1e9;
+const i64 INF=1e18;
+const int mod=1e9+7;
+const int sigma=26;
+string yn(bool x){if(x)return "YES";return "NO";}
+class DSU
+{
+    vector<int>t;
+    size_t sz=0;
+    int root(int x)
+    {
+        if(t[x]!=x)
+            t[x]=root(t[x]);
+        return t[x];
+    }
+public:
+    DSU(int n)
+    {
+        t.assign(n,-1);
+    }
+    void unite(int x,int y)
+    {
+        x=root(x);
+        y=root(y);
+        if(x==y)
+            return;
+        sz--;
+        t[y]=x;
+    }
+    void add(const int& x,const vector<int>&g)
+    {
+        t[x]=x;
+        sz++;
+        for(auto &c:g)
+        {
+            if(t[c]!=-1)
+                unite(c,x);
+        }
+    }
+    size_t size()
+    {
+        return sz;
+    }
+
+};
+ifstream cin("closing.in");
+ofstream cout("closing.out");
+void solve()
+{
+    int n,m;
+    cin>>n>>m;
+    vector<vector<int>>g(n);
+    for(size_t i=0;i<m;i++)
+    {
+        int x,y;
+        cin>>x>>y;
+        x--;
+        y--;
+
+        g[x].pb(y);
+        g[y].pb(x);
+    }
+    vector<int>a(n);
+    cin>>a;
+    for(auto &c:a)
+        c--;
+    DSU dsu(n);
+    vector<bool>rez(n);
+    for(size_t i=n-1;i<n;i--)
+    {
+        dsu.add(a[i],g[a[i]]);
+        rez[i]=dsu.size()==1;
+    }
+    for(auto c:rez)
+        cout<<yn(c)<<'\n';
+
+}
+main()
+{
+    i32 tt=1;
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    //cin>>tt;
+    while(tt--)
+    {
+        solve();
+    }
+}
