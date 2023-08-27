@@ -1,0 +1,172 @@
+#include <fstream>
+#include <algorithm>
+#include <vector>
+#include <cassert>
+#include <cmath>
+#include <stack>
+#include <set>
+#include <functional>
+#include <bitset>
+#include <map>
+#include <unordered_map>
+#include <queue>
+#include <array>
+#include <numeric>
+using namespace std;
+template<typename A, typename B> ostream& operator<<(ostream &os, const pair<A, B> &p) { return os << '(' << p.first << ", " << p.second << ')'; }
+template<typename A> ostream& operator<<(ostream &os, vector<A>&a) { for(auto &c:a)os<<c<<' '; return os;}
+template<typename A> istream& operator>>(istream  &os, vector<A>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,size_t N> istream& operator>>(istream &os, array<A,N>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,typename B> istream& operator>>(istream  &os, pair<A,B>&a) { os>>a.first>>a.second; return os;}
+#define bug(a) cerr << "(" << #a << ": " << a << ")\n";
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define lb lower_bound
+#define ub upper_bound
+#define PQ priority_queue
+using pii= pair<int,int>;
+using VI= vector<int>;
+using v64= vector<int64_t>;
+using i64= int64_t;
+using i16= int16_t;
+using u64= uint64_t;
+using u32= uint32_t;
+using i32= int32_t;
+using u16= uint16_t;
+const i32 inf=1e9;
+const i64 INF=1e18;
+const int mod=1e9+7;
+const int sigma=26;
+string yn(bool x){if(x)return "YES";return "NO";}
+
+
+
+template<typename T>
+struct binary_node
+{
+    binary_node *l,*r;
+    T val;
+    binary_node(T x)
+    {
+        l=r=nullptr;
+        val=x;
+    }
+};
+template<typename T>
+void clear(binary_node<T>*&X)
+{
+    if(X==nullptr)
+        return;
+    clear(X->l);
+    clear(X->r);
+    delete X;
+}
+
+typedef binary_node<int> node;
+int value(node *&X)
+{
+    if(X==nullptr)
+        return 0;
+    return X->val;
+}
+class aint_implicit
+{
+    int n;
+    node* root=nullptr;
+    int add(node *&X,const int st,const int dr,const int& poz)
+    {
+        if(poz<st || poz>dr)
+        {
+            return value(X);
+        }
+        if(X==nullptr)
+        {
+            X=new node(0);
+        }
+        X->val++;
+        if(st!=dr)
+        {
+            int m=(st+dr)/2;
+            add(X->l,st,m,poz);
+            add(X->r,m+1,dr,poz);
+        }
+    }
+
+    int query(node *&X,const int st,const int dr,const int& l,const int& r)
+    {
+        if(l>dr || r<st)
+            return 0;
+        if(l<=st && dr<=r || X==nullptr)
+            return value(X);
+        int m=(st+dr)/2;
+        return query(X->l,st,m,l,r)+query(X->r,m+1,dr,l,r);
+    }
+
+public:
+    void init(int sz)
+    {
+        n=sz;
+        clear(root);
+        root=nullptr;
+    }
+    void add(int poz)
+    {
+        add(root,1,n,poz);
+    }
+    int query(int l,int r)
+    {
+        return query(root,1,n,l,r);
+    }
+    int query(int l)
+    {
+        if(l>n)
+            return 0;
+        return query(root,1,n,l,n);
+    }
+    ~aint_implicit()
+    {
+        clear(root);
+    }
+};
+ifstream cin("promote.in");
+ofstream cout("promote.out");
+void solve()
+{
+    aint_implicit tree;
+    tree.init(inf);
+    int n;
+    cin>>n;
+    vector<int>a(n);
+    cin>>a;
+    vector<vector<int>>g(n);
+    for(int i=1;i<n;i++)
+    {
+        int x;
+        cin>>x;
+        x--;
+        g[x].pb(i);
+    }
+    vector<int>rez(n);
+    function<void(int)>dfs=[&](int nod)
+    {
+        rez[nod]=-tree.query(a[nod]+1);
+        tree.add(a[nod]);
+        for(auto &c:g[nod])
+            dfs(c);
+        rez[nod]+=tree.query(a[nod]+1);
+    };
+    dfs(0);
+    for(auto &c:rez)
+        cout<<c<<'\n';
+}
+main()
+{
+    i32 tt=1;
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    //cin>>tt;
+    while(tt--)
+    {
+        solve();
+    }
+}
