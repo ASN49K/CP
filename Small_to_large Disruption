@@ -1,0 +1,118 @@
+#include <fstream>
+#include <algorithm>
+#include <vector>
+#include <cassert>
+#include <cmath>
+#include <stack>
+#include <set>
+#include <functional>
+#include <bitset>
+#include <map>
+#include <unordered_map>
+#include <queue>
+#include <array>
+#include <numeric>
+using namespace std;
+template<typename A, typename B> ostream& operator<<(ostream &os, const pair<A, B> &p) { return os << '(' << p.first << ", " << p.second << ')'; }
+template<typename A> ostream& operator<<(ostream &os, vector<A>&a) { for(auto &c:a)os<<c<<' '; return os;}
+template<typename A> istream& operator>>(istream  &os, vector<A>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,size_t N> istream& operator>>(istream &os, array<A,N>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,typename B> istream& operator>>(istream  &os, pair<A,B>&a) { os>>a.first>>a.second; return os;}
+#define bug(a) cerr << "(" << #a << ": " << a << ")\n";
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define lb lower_bound
+#define ub upper_bound
+#define PQ priority_queue
+using pii= pair<int,int>;
+using VI= vector<int>;
+using v64= vector<int64_t>;
+using i64= int64_t;
+using i16= int16_t;
+using u64= uint64_t;
+using u32= uint32_t;
+using i32= int32_t;
+using u16= uint16_t;
+const i32 inf=1e9;
+const i64 INF=1e18;
+const int mod=1e9+7;
+const int sigma=26;
+string yn(bool x){if(x)return "YES";return "NO";}
+ifstream cin("disrupt.in");
+ofstream cout("disrupt.out");
+void solve()
+{
+    int n,m;
+    cin>>n>>m;
+    vector<vector<pii>>g(n);
+    for(int i=0;i<n-1;i++)
+    {
+        int x,y;
+        cin>>x>>y;
+        x--;
+        y--;
+        g[x].pb({y,i});
+        g[y].pb({x,i});
+    }
+    vector<array<int,3>>Q(m);
+    cin>>Q;
+    ///poz[i]=pozitia in Q a i ei cea mai mare valoare cost
+    vector<int>poz(m);
+    iota(all(poz),0);
+    sort(all(poz),[&](const int& x,const int& y){
+        return Q[x][2]<Q[y][2];
+    });
+    vector<set<int>>mp(n);
+    for(int i=0;i<m;i++)
+    {
+        mp[ Q[poz[i]][0]-1 ].insert(i);
+        mp[ Q[poz[i]][1]-1 ].insert(i);
+    }
+    auto merge=[&](int x,int y)
+    {
+        if(mp[x].size()<mp[y].size())
+            swap(mp[x],mp[y]);
+        for(auto &c:mp[y])
+        {
+            auto it=mp[x].find(c);
+            if(it==mp[x].end())
+            {
+                mp[x].insert(c);
+            }
+            else
+            {
+                mp[x].erase(c);
+            }
+        }
+    };
+    vector<int>rez(n-1,-1);
+    function<void(int,int,int)>dfs=[&](int nod,int tt,int ind)
+    {
+        for(auto &c:g[nod])
+        {
+            if(c.first==tt)
+                continue;
+            dfs(c.first,nod,c.second);
+            merge(nod,c.first);
+        }
+        if(ind!=-1 && mp[nod].size())
+        {
+            rez[ind]= Q[ poz[*mp[nod].begin()] ][2];
+        }
+    };
+    dfs(0,0,-1);
+    for(auto &c:rez)
+        cout<<c<<'\n';
+
+}
+main()
+{
+    i32 tt=1;
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    //cin>>tt;
+    while(tt--)
+    {
+        solve();
+    }
+}
