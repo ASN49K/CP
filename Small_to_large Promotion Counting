@@ -1,3 +1,4 @@
+///solutie cu parcurgere Euler
 #include <fstream>
 #include <algorithm>
 #include <vector>
