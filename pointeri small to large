@@ -1,0 +1,92 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <cassert>
+#include <cmath>
+#include <stack>
+#include <set>
+#include <functional>
+#include <bitset>
+#include <map>
+#include <unordered_map>
+#include <queue>
+#include <array>
+#include <numeric>
+#include <ext/pb_ds/assoc_container.hpp>
+using namespace std;
+using namespace __gnu_pbds;
+template<typename A, typename B> ostream& operator<<(ostream &os, const pair<A, B> &p) { return os << '(' << p.first << ", " << p.second << ')'; }
+template<typename A> ostream& operator<<(ostream &os, vector<A>&a) { for(auto &c:a)os<<c<<' '; return os;}
+template<typename A> istream& operator>>(istream  &os, vector<A>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,size_t N> istream& operator>>(istream &os, array<A,N>&a) { for(auto &c:a)os>>c; return os;}
+template<typename A,typename B> istream& operator>>(istream  &os, pair<A,B>&a) { os>>a.first>>a.second; return os;}
+#define bug(a) cerr << "(" << #a << ": " << a << ")\n";
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define lb lower_bound
+#define ub upper_bound
+#define PQ priority_queue
+using pii= pair<int,int>;
+using VI= vector<int>;
+using v64= vector<int64_t>;
+using i64= int64_t;
+using i16= int16_t;
+using u64= uint64_t;
+using u32= uint32_t;
+using i32= int32_t;
+using u16= uint16_t;
+const i32 inf=1e9;
+const i64 INF=1e18;
+const int mod=1e9+7;
+const int sigma=26;
+string yn(bool x){if(x)return "YES";return "NO";}
+typedef tree<int, null_type, less<int>, rb_tree_tag,tree_order_statistics_node_update> ordered_set;
+i64 sol;
+//ordered_set mp[200'001];
+
+void merge(ordered_set*& a,ordered_set*& b)
+{
+    if(a->size()<b->size())
+        (*a).swap(*b);
+    i64 r1=0,r2=0;
+    for(auto &c:*b)
+    {
+        r1+=a->order_of_key(c);
+        r2+=a->size()-a->order_of_key(c);
+    }
+    sol+=min(r1,r2);
+    for(auto &c:*b)
+    {
+        a->insert(c);
+    }
+    delete b;
+}
+ordered_set* solve()
+{
+    int x;
+    cin>>x;
+    if(!x)
+    {
+        auto* it1=solve();
+        auto* it2=solve();
+        merge(it1,it2);
+        return it1;
+    }
+    ordered_set* it=new ordered_set;
+    it->insert(x);
+    return it;
+
+}
+main()
+{
+    i32 tt=1;
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    cin>>tt;
+    tt=1;
+    while(tt--)
+    {
+        solve();
+        cout<<sol;
+    }
+}
