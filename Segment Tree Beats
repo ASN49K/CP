@@ -1,0 +1,235 @@
+class AINT_BEAT
+{
+    int n;
+    struct node
+    {
+        int max1,max2,min1,min2,maxc,minc,lazy,dim;
+        i64 sum;
+    };
+    vector<node>a;
+    void merge(int nod)
+    {
+        int l=nod<<1;
+        int r=l+1;
+        a[nod].dim=a[l].dim+a[r].dim;
+        a[nod].sum=a[l].sum+a[r].sum;
+
+
+
+        ///maxx
+        if(a[l].max1==a[r].max1)
+        {
+            a[nod].max1=a[l].max1;
+            a[nod].maxc=a[l].maxc+a[r].maxc;
+            a[nod].max2=max(a[l].max2,a[r].max2);
+        }
+        else
+        {
+            bool ok=false;
+            if(a[l].max1<a[r].max1)
+                ok=true;
+            if(ok)swap(l,r);
+
+            a[nod].max1=a[l].max1;
+            a[nod].maxc=a[l].maxc;
+            a[nod].max2=max(a[l].max2,a[r].max1);
+
+            if(ok)swap(l,r);
+        }
+
+        ///minn
+        if(a[l].min1==a[r].min1)
+        {
+            a[nod].min1=a[l].min1;
+            a[nod].minc=a[l].minc+a[r].minc;
+            a[nod].min2=min(a[l].min2,a[r].min2);
+        }
+        else
+        {
+            bool ok=false;
+            if(a[l].min1>a[r].min1)
+                ok=true;
+            if(ok)swap(l,r);
+
+            a[nod].min1=a[l].min1;
+            a[nod].minc=a[l].minc;
+            a[nod].min2=min(a[l].min2,a[r].min1);
+
+            if(ok)swap(l,r);
+        }
+    }
+
+    void add(int nod,const int val)
+    {
+        a[nod].max1+=val;
+        a[nod].min1+=val;
+        if(a[nod].max2!=-inf)
+        {
+            a[nod].max2+=val;
+            a[nod].min2+=val;
+        }
+        a[nod].sum+=1LL*val*a[nod].dim;
+        a[nod].lazy+=val;
+    }
+
+    void add_min(int nod,const int val)
+    {
+        if(a[nod].max1<=val)
+            return;
+        a[nod].sum-=1LL*(a[nod].max1-val)*a[nod].maxc;
+        a[nod].max1=val;
+        a[nod].min1=min(a[nod].min1,val);
+        if(a[nod].min2!=inf)
+        {
+            a[nod].min2=min(a[nod].min2,val);
+        }
+    }
+
+    void add_max(int nod,const int val)
+    {
+        if(a[nod].min1>=val)
+            return;
+        a[nod].sum+=1LL*(val-a[nod].min1)*a[nod].minc;
+        a[nod].min1=val;
+        a[nod].max1=max(a[nod].max1,val);
+        if(a[nod].max2!=-inf)
+        {
+            a[nod].max2=max(a[nod].max2,val);
+        }
+    }
+
+
+    void push_down(int nod)
+    {
+        int l=nod<<1;
+        int r=l+1;
+
+        add(l,a[nod].lazy);
+        add(r,a[nod].lazy);
+        a[nod].lazy=0;
+
+
+        add_min(l,a[nod].max1);
+        add_min(r,a[nod].max1);
+
+        add_max(l,a[nod].min1);
+        add_max(r,a[nod].min1);
+    }
+
+
+    void updatemin(int nod,int st,int dr,int l,int r,int val)
+    {
+        if(st>r || dr<l || a[nod].max1<=val)
+            return;
+        if(l<=st && dr<=r && a[nod].max2<val)
+        {
+            add_min(nod,val);
+            return;
+        }
+        push_down(nod);
+        int m=(st+dr)/2;
+        updatemin(2*nod,st,m,l,r,val);
+        updatemin(2*nod+1,m+1,dr,l,r,val);
+        merge(nod);
+    }
+
+
+    void updatemax(int nod,int st,int dr,int l,int r,int val)
+    {
+        if(st>r || dr<l || a[nod].min1>=val)
+            return;
+        if(l<=st && dr<=r && a[nod].min2>val)
+        {
+            add_max(nod,val);
+            return;
+        }
+        push_down(nod);
+        int m=(st+dr)/2;
+        updatemax(2*nod,st,m,l,r,val);
+        updatemax(2*nod+1,m+1,dr,l,r,val);
+        merge(nod);
+    }
+
+    void update(int nod,int st,int dr,int l,int r,int val)
+    {
+        if(st>r || dr<l)
+            return;
+        if(l<=st && dr<=r)
+        {
+            add(nod,val);
+            return;
+        }
+        push_down(nod);
+        int m=(st+dr)/2;
+        update(2*nod,st,m,l,r,val);
+        update(2*nod+1,m+1,dr,l,r,val);
+        merge(nod);
+    }
+
+
+    void build(int nod,int st,int dr,vector<int>&v)
+    {
+        a[nod].lazy=0;
+        if(st==dr)
+        {
+            a[nod].max1=a[nod].min1=a[nod].sum=v[st];
+            a[nod].maxc=a[nod].minc=a[nod].dim=1;
+            a[nod].max2=-inf;
+            a[nod].min2=inf;
+            return;
+        }
+        int m=(st+dr)/2;
+        build(2*nod,st,m,v);
+        build(2*nod+1,m+1,dr,v);
+        merge(nod);
+    }
+    int maxx;
+    i64 rez;
+    void query(int nod,int st,int dr,const int l,const int r)
+    {
+        if(st>r || dr<l)
+            return;
+        if(l<=st && dr<=r)
+        {
+            rez+=a[nod].sum;
+            maxx=max(maxx,a[nod].max1);
+            return;
+        }
+        push_down(nod);
+        int m=(st+dr)/2;
+        query(2*nod,st,m,l,r);
+        query(2*nod+1,m+1,dr,l,r);
+    }
+public:
+    AINT_BEAT(vector<int>&v)
+    {
+        this->n=v.size();
+        a=vector<node>(4*n+1);
+        build(1,0,n-1,v);
+    }
+    void updatemin(int l,int r,int val)
+    {
+        updatemin(1,0,n-1,l,r,val);
+    }
+    void updatemax(int l,int r,int val)
+    {
+        updatemax(1,0,n-1,l,r,val);
+    }
+    void update(int l,int r,int val)
+    {
+        update(1,0,n-1,l,r,val);
+    }
+    int querymaxx(int l,int r)
+    {
+        maxx=-1;
+        query(1,0,n-1,l,r);
+        return maxx;
+    }
+    int querysum(int l,int r)
+    {
+        rez=0;
+        query(1,0,n-1,l,r);
+        return rez;
+    }
+
+};
