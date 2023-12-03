@@ -1,0 +1,179 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define bug(x) cerr<<#x<<" ( "<<x<<endl
+using i64=int64_t;
+const int N=5e4;
+vector<int>g[N],lca[N];
+int tout[N];
+int t[N],dp[N];
+
+///DSU
+int dsu_t[N];
+void dsu_init(int n)
+{
+    for(int i=0;i<n;i++)
+        dsu_t[i]=i;
+}
+int root(int x)
+{
+    if(dsu_t[x]!=x)
+        dsu_t[x]=root(dsu_t[x]);
+    return dsu_t[x];
+}
+void unite(int x,int y)
+{
+    assert(x==root(x));
+    assert(y==root(y));
+    dsu_t[y]=x;
+}
+//////////////
+
+
+void dfs(int nod,int tt)
+{
+    static int acm=0;
+    t[nod]=tt;
+    for(auto &c:g[nod])
+    {
+        if(c!=tt)
+        {
+            dfs(c,nod);
+        }
+    }
+    tout[nod]=acm++;
+}
+//+1 la x,y -1 la lca,-1 la tatal lca(daca lca nu este 0)
+void dfs2(int nod)
+{
+    for(auto &c:g[nod])
+    {
+        if(c!=t[nod])
+        {
+            dfs2(c);
+        }
+    }
+    for(auto &c:lca[nod])
+    {
+        int x=root(c);
+        dp[x]--;
+        if(x>0)
+        {
+            dp[t[x]]--;
+        }
+    }
+    unite(t[nod],nod);
+}
+void dfs3(int nod)
+{
+    for(auto &c:g[nod])
+    {
+        if(c!=t[nod])
+        {
+            dfs3(c);
+            dp[nod]+=dp[c];
+        }
+    }
+}
+main()
+{
+    ifstream cin("maxflow.in");
+    ofstream cout("maxflow.out");
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    int n,q;
+    cin>>n>>q;
+    dsu_init(n);
+    for(int i=1;i<n;i++)
+    {
+        int x,y;
+        cin>>x>>y;
+        x--;
+        y--;
+        g[x].pb(y);
+        g[y].pb(x);
+    }
+    dfs(0,0);
+    for(int i=0;i<q;i++)
+    {
+        int x,y;
+        cin>>x>>y;
+        x--;
+        y--;
+        dp[x]++;
+        dp[y]++;
+        if(tout[x]>tout[y])
+        {
+            swap(x,y);
+        }
+        lca[y].pb(x);
+    }
+    dfs2(0);
+    dfs3(0);
+    cout<<*max_element(dp,dp+n);
+}
+/*
+solutie in O(N) cu tarjan
+5.6mb
+3ms
+*
+2
+5.6mb
+3ms
+*
+3
+5.7mb
+4ms
+*
+4
+5.7mb
+4ms
+*
+5
+5.7mb
+4ms
+*
+6
+5.7mb
+4ms
+*
+7
+6.0mb
+7ms
+*
+8
+10.6mb
+59ms
+*
+9
+9.7mb
+57ms
+*
+10
+9.3mb
+56ms
+*
+11
+9.4mb
+56ms
+*
+12
+9.2mb
+55ms
+*
+13
+10.0mb
+58ms
+*
+14
+11.6mb
+61ms
+*
+15
+9.8mb
+58ms
+
+
+
+*/
