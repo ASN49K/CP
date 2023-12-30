@@ -1,0 +1,41 @@
+//weird build
+#include <bits/stdc++.h>
+using namespace std;
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define bug(x) cerr<<#x<<" ( "<<x<<endl
+using i64=long long;
+const int inf=1e9;
+const int mod=1e9+7;
+int main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    int n,add;
+    cin>>n>>add;
+    vector<int>v(n),a(n);
+    for(auto &c:v)
+    {
+        cin>>c;
+    }
+    for(auto &c:a)
+    {
+        cin>>c;
+    }
+    vector<vector<int>>dp(n+1,vector<int>(n,0));
+    for(int l=n-1; l>=0; l--)
+    {
+        for(int r=l+1; r<n; r++)
+        {
+            dp[l][r]=max(dp[l+1][r],dp[l][r-1]);
+            for(int k=l+1; k<=r; k++)
+            {
+                if(a[l]+add==a[k])
+                {
+                    dp[l][r]=max(dp[l][r],v[l]+v[k]+dp[l+1][k-1]+dp[k+1][r]);
+                }
+            }
+        }
+    }
+    cout<<dp[0][n-1];
+}
