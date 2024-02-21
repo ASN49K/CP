@@ -1,0 +1,44 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+#define pb push_back
+#define all(x) x.begin(),x.end()
+using i64=long long;
+const int mod=1e9+7;
+main()
+{
+    ifstream cin("help.in");
+    ofstream cout("help.out");
+    int n;
+    cin>>n;
+    vector<bool>is_start(2*n);
+    for(int i=0;i<n;i++)
+    {
+        int x,y;
+        cin>>x>>y;
+        is_start[x-1]=true;
+        is_start[y-1]=false;
+    }
+    vector<int>pow(n+1,1);
+    for(int i=1;i<=n;i++)
+    {
+        pow[i]=(pow[i-1]*2)%mod;
+    }
+    int open=0;
+    int rez=0;
+    for(int i=0;i<2*n;i++)
+    {
+        if(is_start[i])
+        {
+            open++;
+        }
+        else
+        {
+            rez+=pow[n-open];
+            rez%=mod;
+            open--;
+        }
+    }
+    cout<<rez;
+    return 0;
+}
