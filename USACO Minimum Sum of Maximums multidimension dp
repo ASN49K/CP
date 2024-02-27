@@ -1,0 +1,95 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define bug(x) cerr<<#x<<" ( "<<x<<endl
+#define UNSEEN -1
+using i64=long long;
+const int inf=1e6;
+struct segment
+{
+    int poz1,poz2,size;
+};
+main()
+{
+    int n,k;
+    cin>>n>>k;
+    vector<int>a(n+2,inf);
+    multiset<int>not_fixed;
+    for(int i=1;i<=n;i++)
+    {
+        cin>>a[i];
+        not_fixed.insert(a[i]);
+    }
+    vector<int>pozk(k+2,0);
+    pozk[k+1]=n+1;
+    for(int i=1;i<=k;i++)
+    {
+        cin>>pozk[i];
+        not_fixed.erase(not_fixed.find(a[pozk[i]]));
+    }
+    int rez=0;
+    vector<segment>segments;
+    for(int i=1;i<=k+1;i++)
+    {
+        int sz=pozk[i]-pozk[i-1]-1;
+        if(sz==0)
+        {
+            rez+=max(a[pozk[i-1]] , a[pozk[i]]);
+        }
+        else
+        {
+            if(a[pozk[i-1]] < a[pozk[i]])
+            {
+                segments.pb({pozk[i-1] , pozk[i] ,sz});
+            }
+            else
+            {
+                segments.pb({pozk[i] , pozk[i-1] ,sz});
+            }
+        }
+    }
+    int seg_size=(int)segments.size();
+    map<vector<int> , int>old;
+    old[vector<int>(seg_size,0)]=0;
+    for(auto &c:not_fixed)
+    {
+        map<vector<int> , int> dp;
+        for(auto &vv:old)
+        {
+            auto v=vv.first;
+            auto vcost=vv.second;
+            for(int i=0;i<seg_size;i++)
+            {
+                if(v[i]<segments[i].size)
+                {
+                    v[i]++;
+
+                    int new_cost=vcost;
+                    if(v[i]==1)
+                    {
+                        new_cost+=max( c , a[segments[i].poz1] );
+                    }
+                    else
+                    {
+                        new_cost+=c;
+                    }
+                    if(v[i]==segments[i].size)
+                    {
+                        new_cost+=max( c , a[segments[i].poz2] );
+                    }
+
+                    auto it=dp.find(v);
+                    if(it==dp.end() || new_cost<it->second)
+                    {
+                        dp[v]=new_cost;
+                    }
+
+                    v[i]--;
+                }
+            }
+        }
+        old=dp;
+    }
+    cout<<old.begin()->second-2*inf+rez;
+}
