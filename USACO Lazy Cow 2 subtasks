@@ -1,0 +1,83 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define bug(x) cerr<<#x<<" ( "<<x<<endl
+#define UNSEEN -1
+using i64=long long;
+const i64 INF=1e18;
+const int mod=1e9+7;
+int pw(int a,i64 p)
+{
+    int rez=1;
+    while(p)
+    {
+        if(p&1)
+        {
+            rez=(1LL*rez*a)%mod;
+        }
+        p>>=1;
+        a=(1LL*a*a)%mod;
+    }
+    return rez;
+}
+int p3(i64 p)
+{
+    if(p==0)
+    {
+        return 0;
+    }
+    return pw(3,p-1);
+}
+
+struct duo
+{
+    int timp;
+    i64 val;
+    i64 maxx_per_field;
+    int sum;
+};
+main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    int n;
+    cin>>n;
+    map<int,i64>mp;
+
+    for(int i=0;i<n;i++)
+    {
+        int x;
+        i64 y;
+        cin>>x>>y;
+        mp[x]=max(mp[x] , y);
+
+        i64 last=0;
+        int rez=0;
+        stack<duo>sk;
+        sk.push({0,0,INF,0});
+        for(auto &c:mp)
+        {
+            if(last>c.second)
+            {
+                continue;
+            }
+            while(sk.top().maxx_per_field < (c.second-sk.top().val+c.first-sk.top().timp-1)/(c.first-sk.top().timp)  )
+            {
+                rez=(rez-sk.top().sum+mod)%mod;
+                sk.pop();
+            }
+            int time=c.first-sk.top().timp;
+            i64 to_cover=c.second-sk.top().val;
+
+            int cost1=(1LL*p3(to_cover/time+1)*(to_cover%time))%mod;
+            int cost2=(1LL*p3(to_cover/time)*(time-(to_cover%time)))%mod;
+
+
+            sk.push({c.first,c.second,to_cover/time+((to_cover%time)>0),(cost1+cost2)%mod});
+            rez=(1LL*rez+cost1+cost2)%mod;
+            last=c.second;
+        }
+        cout<<rez<<'\n';
+    }
+}
