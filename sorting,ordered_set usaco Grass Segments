@@ -1,0 +1,62 @@
+#include <bits/stdc++.h>
+#include <ext/pb_ds/assoc_container.hpp>
+using namespace std;
+using namespace __gnu_pbds;
+#define all(x) x.begin(),x.end()
+#define pb push_back
+
+using Tree= tree<int,null_type,less_equal<int>,rb_tree_tag,tree_order_statistics_node_update>;
+struct Segment
+{
+    int l,r,k,rez;
+    int len()
+    {
+        return r-l;
+    }
+};
+int main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    int n;
+    cin>>n;
+
+    vector<Segment>a(n);
+    for(auto &c:a)
+    {
+        cin>>c.l>>c.r>>c.k;
+    }
+
+    vector<int>ord_k(n),ord_len(n);
+    iota(all(ord_k) , 0);
+    iota(all(ord_len) , 0);
+
+    sort(all(ord_k) , [&](int x,int y){return a[x].k>a[y].k;});
+    sort(all(ord_len) , [&](int x,int y){return a[x].len()>a[y].len();});
+
+
+    Tree right_points,left_points;
+    int it=0;
+    for(auto &c:ord_k)
+    {
+        while(it<n && a[c].k <= a[ord_len[it]].len())
+        {
+            right_points.insert(a[ord_len[it]].r);
+            left_points.insert(a[ord_len[it]].l);
+            it++;
+        }
+
+
+        //toate in afara de el si de cele care nu sunt in stanga
+        a[c].rez = it-right_points.order_of_key(a[c].l+a[c].k);
+
+        a[c].rez -= it-left_points.order_of_key(a[c].r-a[c].k+1);
+
+    }
+
+    for(auto &c:a)
+    {
+        //il scad pe el
+        cout<<c.rez-1<<'\n';
+    }
+}
