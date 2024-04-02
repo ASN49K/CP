@@ -1,0 +1,120 @@
+#include <bits/stdc++.h>
+#include <ext/pb_ds/assoc_container.hpp>
+using namespace std;
+using namespace __gnu_pbds;
+#define all(x) x.begin(),x.end()
+#define pb push_back
+
+using Tree= tree<int,null_type,less_equal<int>,rb_tree_tag,tree_order_statistics_node_update>;
+struct Aib
+{
+    int n;
+    vector<int>aib;
+
+    int lsb(int x)
+    {
+        return (x&(-x));
+    }
+    void update(int poz,int val)
+    {
+        while(poz<=n)
+        {
+            aib[poz]+=val;
+            poz+=lsb(poz);
+        }
+    }
+    int query(int poz)
+    {
+        int rez=0;
+        while(poz>0)
+        {
+            rez+=aib[poz];
+            poz-=lsb(poz);
+        }
+        return rez;
+    }
+    Aib(int n)
+    {
+        this->n=n;
+        aib.assign(n+1,0);
+    }
+};
+struct Segment
+{
+    int l,r,k,rez;
+    int len()
+    {
+        return r-l;
+    }
+};
+vector<int>v;
+void build_normal(vector<Segment>&a)
+{
+    for(auto &c:a)
+    {
+        v.pb(c.l);
+        v.pb(c.r);
+    }
+
+    sort(all(v));
+    v.erase(unique(all(v)) ,v.end());
+}
+
+int get_upper(int val)
+{
+    return upper_bound(all(v) , val)-v.begin()+1;
+}
+int get_lower(int val)
+{
+    return lower_bound(all(v) , val)-v.begin()+1;
+}
+
+
+int main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    int n;
+    cin>>n;
+
+    vector<Segment>a(n);
+    for(auto &c:a)
+    {
+        cin>>c.l>>c.r>>c.k;
+    }
+    build_normal(a);
+
+    vector<int>ord_k(n),ord_len(n);
+    iota(all(ord_k) , 0);
+    iota(all(ord_len) , 0);
+
+    sort(all(ord_k) , [&](int x,int y){return a[x].k>a[y].k;});
+    sort(all(ord_len) , [&](int x,int y){return a[x].len()>a[y].len();});
+
+
+    Aib right_points(v.size()+1),left_points(v.size()+1);
+    int it=0;
+    for(auto &c:ord_k)
+    {
+        while(it<n && a[c].k <= a[ord_len[it]].len())
+        {
+            right_points.update(get_lower(a[ord_len[it]].r) ,1);
+            left_points.update(get_lower(a[ord_len[it]].l) ,1);
+            it++;
+        }
+
+
+        //toate in afara de el si de cele care nu sunt in stanga
+        a[c].rez = it-right_points.query(get_lower(a[c].l+a[c].k)-1);
+
+        a[c].rez -= it-left_points.query(get_upper(a[c].r-a[c].k)-1);
+
+    }
+    g=vector<vector<int>>(n+1);
+    dp=vector<int>(n+1);
+    for(auto &c:a)
+    {
+        //il scad pe el
+        cout<<c.rez-1<<'\n';
+    }
+}
