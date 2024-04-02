@@ -1,0 +1,132 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define pb push_back
+#define all(x) x.begin(),x.end()
+using i64=long long;
+const int mod=1e9+7;
+const int inf=1e9;
+struct Aib
+{
+    int n;
+    vector<int>aib;
+    int lsb(int x)
+    {
+        return x&(-x);
+    }
+    void update(int poz,int val)
+    {
+        while(poz<=n)
+        {
+            aib[poz]+=val;
+            if(aib[poz]>=mod)
+            {
+                aib[poz]-=mod;
+            }
+            poz+=lsb(poz);
+        }
+    }
+    int query(int poz)
+    {
+        int rez=0;
+        while(poz>0)
+        {
+            rez+=aib[poz];
+            if(rez>=mod)
+            {
+                rez-=mod;
+            }
+            poz-=lsb(poz);
+        }
+        return rez;
+    }
+    Aib(int n)
+    {
+        this->n=n;
+        aib.assign(n+1,0);
+    }
+    Aib(){}
+};
+
+struct Colour
+{
+    vector<int>poz;
+    Aib aib;
+
+    void add(int pozz)
+    {
+        poz.pb(pozz);
+    }
+    void start_proc()
+    {
+        sort(all(poz));
+        poz.erase(unique(all(poz)) , poz.end());
+        aib=Aib(poz.size());
+        poz.pb(inf);
+    }
+    int get_poz(int val)
+    {
+        return upper_bound(all(poz) ,val)-poz.begin();
+    }
+    void update(int poz,int val)
+    {
+        aib.update(get_poz(poz) , val);
+    }
+    int query_minus(int poz)
+    {
+        return aib.query(get_poz(poz)-1);
+    }
+    int query_exact(int poz)
+    {
+        return aib.query(get_poz(poz));
+    }
+};
+main()
+{
+    ifstream cin("hopscotch.in");
+    ofstream cout("hopscotch.out");
+    int n,m,k;
+    cin>>n>>m>>k;
+    vector<vector<int>>a(n,vector<int>(m));
+    for(auto &v:a)
+        for(auto &c:v)
+            cin>>c;
+
+    vector<Colour>colours(k+1);
+    for(int i=0;i<m;i++)
+    {
+        colours[0].add(i);
+    }
+    for(int i=0;i<n;i++)
+    {
+        for(int j=0;j<m;j++)
+        {
+            colours[a[i][j]].add(j);
+        }
+    }
+    for(auto &c:colours)
+    {
+        c.start_proc();
+    }
+
+    colours[0].update(0,1);
+    colours[a[0][0]].update(0,1);
+    for(int i=1;i<n;i++)
+    {
+        for(int j=m-1;j>0;j--)
+        {
+            int rez=colours[0].query_minus(j)-colours[a[i][j]].query_minus(j);
+            if(rez<0)
+            {
+                rez+=mod;
+            }
+            if(i==n-1 && j==m-1)
+            {
+                cout<<rez;
+            }
+
+            colours[0].update(j,rez);
+            colours[a[i][j]].update(j,rez);
+        }
+    }
+
+}
