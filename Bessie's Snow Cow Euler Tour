@@ -1,0 +1,143 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define pb push_back
+#define all(x) x.begin(),x.end()
+using i64=int;
+const int inf=1e9;
+const int N=1e5;
+int n;
+array<int,N>tin,tout,pos_tin;
+array<vector<int>,N>g;
+set<int>mp[N];
+
+struct Aib
+{
+    int n;
+    vector<i64>aib;
+    int lsb(int x)
+    {
+        return (x&(-x));
+    }
+    void update(int poz,i64 val)
+    {
+        while(poz<=n)
+        {
+            aib[poz]+=val;
+            poz+=lsb(poz);
+        }
+    }
+    i64 query(int poz)
+    {
+        i64 rez=0;
+        while(poz>0)
+        {
+            rez+=aib[poz];
+            poz-=lsb(poz);
+        }
+        return rez;
+    }
+
+    i64 query_range(int l,int r)
+    {
+        return query(r)-query(l-1);
+    }
+    Aib(int n)
+    {
+        this->n=n;
+        aib.assign(n+1,0);
+    }
+    Aib(){}
+};
+
+struct Range_aib
+{
+    array<Aib,2>aib;
+    void update(int l,int r,i64 val)
+    {
+        aib[0].update(l,val);
+        aib[0].update(r+1,-val);
+        aib[1].update(l,-1LL*(l-1)*val);
+        aib[1].update(r+1,r*val);
+    }
+    i64 query(int l)
+    {
+        return aib[0].query(l)*l+aib[1].query(l);
+    }
+    i64 query(int l,int r)
+    {
+        return query(r)-query(l-1);
+    }
+    Range_aib(int n)
+    {
+        aib[0]=aib[1]=Aib(n);
+    }
+    Range_aib(){}
+};
+Range_aib aib;
+void dfs(int nod,int tt)
+{
+    static int acm=-1;
+    tin[nod]=++acm;
+    pos_tin[acm]=nod;
+    for(auto &c:g[nod])
+    {
+        if(c!=tt)
+            dfs(c,nod);
+    }
+    tout[nod]=acm;
+}
+
+
+void update(int nod,int val)
+{
+    aib.update(tin[nod]+1,tout[nod]+1,val);
+}
+main()
+{
+    ifstream cin("snowcow.in");
+    ofstream cout("snowcow.out");
+    //ios::sync_with_stdio(false);
+    //cin.tie(0);
+    int q;
+    cin>>n>>q;
+    aib=Range_aib(n);
+    for(int i=1;i<n;i++)
+    {
+        int x,y;
+        cin>>x>>y;
+        x--;
+        y--;
+        g[x].pb(y);
+        g[y].pb(x);
+    }
+    dfs(0,0);
+    while(q--)
+    {
+        int cer,x;
+        cin>>cer>>x;
+        x--;
+        if(cer==1)
+        {
+            int c;
+            cin>>c;
+            c--;
+            auto it=mp[c].upper_bound(tin[x]);
+            if(mp[c].size() && (it!=mp[c].begin() && tout[pos_tin[*prev(it)]]>=tout[x]))
+            {
+                continue;
+            }
+            while(it!=mp[c].end() && *it<=tout[x])
+            {
+                update(pos_tin[*it],-1);
+                it++;
+                mp[c].erase(prev(it));
+            }
+            mp[c].insert(tin[x]);
+            update(x,1);
+        }
+        else
+        {
+            cout<<aib.query(tin[x]+1,tout[x]+1)<<'\n';
+        }
+    }
+}
