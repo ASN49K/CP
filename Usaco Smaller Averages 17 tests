@@ -1,0 +1,85 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+#define pb push_back
+#define all(x) x.begin(),x.end()
+using i64=long long;
+const int N=500;
+const int mod=1e9+7;
+int n;
+int dp[N+1][N+1];
+int sa[N+1],sb[N+1];
+bool compare(int i1,int i2,int j1,int j2)
+{
+    return 1LL*(sa[i2]-sa[i1])*(j2-j1)<=1LL*(sb[j2]-sb[j1])*(i2-i1);
+}
+
+int add(int x,int y)
+{
+    x+=y;
+    if(x>=mod)
+    {
+        x-=mod;
+    }
+    if(x<0)
+    {
+        x+=mod;
+    }
+    return x;
+}
+int main()
+{
+    cin>>n;
+    for(int i=1;i<=n;i++)
+    {
+        cin>>sa[i];
+        sa[i]+=sa[i-1];
+    }
+    for(int i=1;i<=n;i++)
+    {
+        cin>>sb[i];
+        sb[i]+=sb[i-1];
+    }
+    dp[0][0]=1;
+    for(int i=1;i<=n;i++)
+    {
+        vector<int>ord(i,0);
+        iota(all(ord) , 0);
+        sort(all(ord) , [&](int l,int r){
+            return 1LL*(sa[i]-sa[l])*(i-r)<1LL*(sa[i]-sa[r])*(i-l);
+        });
+
+        vector<vector<int>>sum(i+1,vector<int>(n+1,0));
+        for(int j=1;j<=i;j++)
+        {
+            sum[j][0]=dp[ord[j-1]][0]+sum[j-1][0];
+            for(int k=1;k<=n;k++)
+            {
+                sum[j][k]=add(dp[ord[j-1]][k] , sum[j-1][k]);
+            }
+        }
+
+        for(int j2=1;j2<=n;j2++)
+        {
+            for(int j1=0;j1<j2;j1++)
+            {
+                int st=1,dr=i,rez=0;
+                while(st<=dr)
+                {
+                    int m=(st+dr)/2;
+                    if(compare(ord[m-1],i,j1,j2))
+                    {
+                        rez=m;
+                        st=m+1;
+                    }
+                    else
+                    {
+                        dr=m-1;
+                    }
+                }
+                dp[i][j2]=add(dp[i][j2] , sum[rez][j1]);
+            }
+        }
+    }
+    cout<<dp[n][n];
+}
