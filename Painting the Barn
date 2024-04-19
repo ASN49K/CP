@@ -1,0 +1,109 @@
+//we first do mars 2d on the table given we say that cell(x,y) , (x,x+1]
+//then we have to find the 2 submatrices whith the biggest number of cells filld k-1 times - the cells filled k times (search init_delta function)
+#include <fstream>
+#define pb push_back
+#define all(x) x.begin(),x.end()
+using namespace std;
+using i64 = long long;
+const int mod=1e9+7;
+const int CORD_MAX=200;
+int req_value,rez_start;
+int sum[CORD_MAX+2][CORD_MAX+2];
+int delta[CORD_MAX+2][CORD_MAX+2];
+int dp[CORD_MAX+2][CORD_MAX+2];
+int new_dp[CORD_MAX+2][CORD_MAX+2];
+
+void read()
+{
+    ifstream cin("paintbarn.in");
+    int n;
+    cin>>n>>req_value;
+    for(int i=0;i<n;i++)
+    {
+        int x1,x2,y1,y2;
+        cin>>x1>>y1>>x2>>y2;
+        sum[x1+1][y1+1]++;
+        sum[x1+1][y2+1]--;
+        sum[x2+1][y1+1]--;
+        sum[x2+1][y2+1]++;
+    }
+}
+
+int query(int matrix[CORD_MAX+2][CORD_MAX+2],int x1,int y1,int x2,int y2)
+{
+    return matrix[x2][y2]-matrix[x1-1][y2]-matrix[x2][y1-1]+matrix[x1-1][y1-1];
+}
+
+void prefix_sum2d(int matrix[CORD_MAX+2][CORD_MAX+2])
+{
+    for(int i=1;i<=CORD_MAX;i++)
+    {
+        for(int j=1;j<=CORD_MAX;j++)
+        {
+            matrix[i][j]+=matrix[i-1][j]+matrix[i][j-1]-matrix[i-1][j-1];
+        }
+    }
+}
+void init_delta()
+{
+    for(int i=1;i<=CORD_MAX;i++)
+    {
+        for(int j=1;j<=CORD_MAX;j++)
+        {
+            if(sum[i][j]==req_value)
+            {
+                delta[i][j]=-1;
+                rez_start++;
+            }
+            if(sum[i][j]==req_value-1)
+            {
+                delta[i][j]=1;
+            }
+        }
+    }
+}
+
+void build_dp()
+{
+    for(int i=1;i<=CORD_MAX+1;i++)
+    {
+        for(int j=1;j<=CORD_MAX+1;j++)
+        {
+            dp[i][j]=max(new_dp[i][j] , max(dp[i][j-1] , dp[i-1][j]));
+        }
+    }
+}
+
+void calculate_solution()
+{
+    for(int sus=1;sus<=CORD_MAX;sus++)
+    {
+        for(int jos=sus;jos>0;jos--)
+        {
+            int sum_now=0;
+            for(int i=1;i<=CORD_MAX;i++)
+            {
+                int val_col=query(delta , i, jos, i ,sus);
+                sum_now=max(max(sum_now, dp[jos][i]) + val_col, 0);
+                new_dp[1][i+1]=max(sum_now , new_dp[1][i+1]);
+                new_dp[sus+1][1]=max(sum_now , new_dp[sus+1][1]);
+            }
+        }
+    }
+}
+main()
+{
+    read();
+    prefix_sum2d(sum);
+    init_delta();
+    prefix_sum2d(delta);
+    calculate_solution();
+    build_dp();
+    int old=dp[CORD_MAX+1][CORD_MAX+1];
+    calculate_solution();
+    build_dp();
+
+    ofstream out("paintbarn.out");
+    out<<rez_start+dp[CORD_MAX+1][CORD_MAX+1];
+
+}
