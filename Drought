@@ -1,0 +1,57 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64=long long;
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define UNSET -1
+const int N=100,MAX_VAL=1000;
+const int mod=1e9+7;
+int n;
+vector<int>a;
+void add_self(int& x,int y)
+{
+    x+=y;
+    x%=mod;
+}
+int solve(int k)
+{
+    array<array<int,MAX_VAL+2>,2>dp;
+    fill(all(dp[0]) , 0);
+    ///array<int,2>maxx={0,-1};
+    dp[0][0]=1;
+    for(int i=0;i<n;i++)
+    {
+        fill(all(dp[(i&1)^1]) , 0);
+        ///maxx[(i&1)^1]=a[i];
+        for(int j=0;j<=MAX_VAL;j++)
+        {
+            if(a[i]-k-j>=0)
+            {
+                add_self(dp[(i&1)^1][a[i]-k-j],dp[i&1][j]);
+            }
+        }
+        for(int j=MAX_VAL;j>=0;j--)
+        {
+            add_self(dp[(i&1)^1][j],dp[(i&1)^1][j+1]);
+        }
+    }
+    return dp[n&1][0];
+}
+int main()
+{
+    cin>>n;
+    a.resize(n);
+    for(auto &c:a)
+    {
+        cin>>c;
+    }
+    int rez=solve(0);
+    if(n&1)
+    {
+        for(int i=1;i<=*min_element(all(a));i++)
+        {
+            add_self(rez , solve(i));
+        }
+    }
+    cout<<rez;
+}
