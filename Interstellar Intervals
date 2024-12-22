@@ -1,0 +1,131 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64=long long;
+#define UNUSED -1
+#define all(x) x.begin(),x.end()
+#define pb push_back
+const i64 INF=2e18;
+const int inf=1e9;
+const int mod=1e9+7;
+mt19937 rng(69);
+const int N=500'000;
+int sum_dp[N+1],dp[N+1];
+vector<pair<int,int>>bad;
+void add_self(int& x,int y)
+{
+    x+=y;
+    if(x<0)
+    {
+        x+=mod;
+    }
+    if(x>=mod)
+    {
+        x-=mod;
+    }
+}
+int add(int x,int y)
+{
+    add_self(x,y);
+    return x;
+}
+int get_sum(int l,int r,int rest)
+{
+    assert(l<=r);
+    assert(rest>=0 && rest<2);
+    if((l&1)!=rest)
+    {
+        l++;
+    }
+    if((r&1)!=rest)
+    {
+        r--;
+    }
+    if(l>r || r<0)
+    {
+        assert(add(sum_dp[r],-sum_dp[l-2])==0);
+        return 0;
+    }
+    if(l-2<0)
+    {
+        return sum_dp[r];
+    }
+    return add(sum_dp[r],-sum_dp[l-2]);
+}
+signed main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    int n;
+    cin>>n;
+    string s;
+    cin>>s;
+    s=" "+s;
+    dp[0]=1;
+    sum_dp[0]=1;
+
+    int last_r=0;
+    for(int i=1;i<=n;i++)
+    {
+        if(i>=2)
+        {
+            sum_dp[i]=sum_dp[i-2];
+        }
+        //scadem -1 ca ne mutam la dreapta
+        for(auto &c:bad)
+        {
+            c.first--;
+        }
+        vector<pair<int,int>>new_bad;
+        if(bad.size())
+        {
+            int l=bad[0].first,r=bad[0].second;
+            for(auto &c:bad)
+            {
+                if(r<c.first)
+                {
+                    new_bad.pb({l,r});
+                    l=c.first;
+                    r=c.second;
+                }
+                else
+                {
+                    r=c.second;
+                }
+            }
+            new_bad.pb({l,r});
+        }
+        bad=new_bad;
+
+
+        if(s[i]=='R')
+        {
+            last_r=i;
+            continue;
+        }
+
+        const int last_poz=max(2*last_r-i , 0);
+        //ne comportam orice ar fi ca si cum e albastru final
+            add_self(dp[i],get_sum(last_poz,i-1,i%2));
+            for(auto &c:bad)
+            {
+                if(c.second>=last_poz)
+                {
+                    add_self(dp[i],-get_sum(max(c.first,last_poz),c.second,i%2));
+                }
+            }
+
+        //acum adaugam la bad daca e albastru
+        if(s[i]=='B')
+        {
+            bad.push_back(make_pair(i,i-1));
+        }
+        //luam cazul in care lasam necolorat
+        if(s[i]=='X')
+        {
+            add_self(dp[i] , dp[i-1]);
+        }
+        //adaugam dp la sum_dp
+        add_self(sum_dp[i] , dp[i]);
+    }
+    cout<<dp[n];
+}
