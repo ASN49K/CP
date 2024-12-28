@@ -1,0 +1,117 @@
+//ok deci ideea e sa sa fac dp[now][mask][j].cnt=numarul elementelor care au bitii [now+1,k-1] egali
+//ok deci ideea e sa sa fac dp[now][mask][j].sum_biti=numarul bitilor din operatia &
+//cand facem tranzitia now o sa fie ultimul bit diferit(deci de la 0->1 si 1->0)
+//if(j==0) e necesar ca nu poate sa existe un i cu bitul 1 cu intersectia cu alt numar cu 0 biti
+//mask e numar cu bitul now 1
+//opus e mask dar cu bitul now 0
+//deci se fac tranzitii intre mask si opus
+//dp[k][mask][j].sum_biti o sa aiba suma bitilor de 1 din operatia & daca maskul e mask si reuniunea e de j biti
+//de aia impart dupa inv[i](inversul lui i modulo)
+#include <bits/stdc++.h>
+using namespace std;
+using i64=long long;
+//#define UNUSED -1
+#define all(x) x.begin(),x.end()
+#define pb push_back
+#define int long long
+const i64 INF=2e18;
+const int inf=1e9;
+const int mod=1e9+7;
+
+
+inline int add(int x,int y)
+{
+    return (x+y)%mod;
+}
+inline int prod(int x,int y)
+{
+    return (1LL*x*y)%mod;
+}
+int pw2(int a,int p)
+{
+    int rez=1;
+    while(p>0)
+    {
+        if(p&1)
+        {
+            rez=prod(rez , a);
+        }
+        a=prod(a,a);
+        p>>=1;
+    }
+    return rez;
+}
+void add_self(int& x,int y)
+{
+    x=add(x,y);
+}
+struct duo
+{
+    int cnt,sum_biti;
+};
+signed main()
+{
+    cerr<<(1<<10);
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    int n,k;
+    cin>>n>>k;
+    vector<int>a(n);
+    for(auto &c:a)
+    {
+        cin>>c;
+    }
+    vector<vector<duo>>dp(1<<k , vector<duo>(k+1 , {0,0}));
+    for(auto &c:a)
+    {
+        dp[c][0].cnt++;
+    }
+    for(int now=0;now<k;now++)
+    {
+        for(int mask=0;mask<(1<<k);mask++)
+        {
+            if((mask>>now)&1)
+            {
+                int opus=(mask^(1<<now));
+                assert((mask|opus)==mask);
+                assert((mask&opus)==opus);
+                for(int j=now+1;j>=0;j--)
+                {
+                    if(j==0)
+                    {
+                        dp[mask][j]={0,0};
+                    }
+                    else
+                    {
+                        dp[opus][j].cnt += dp[mask][j-1].cnt;
+                        dp[opus][j].sum_biti += dp[mask][j-1].sum_biti;
+
+
+                        dp[mask][j].cnt=dp[mask][j-1].cnt + dp[opus][j-1].cnt;
+                        dp[mask][j].sum_biti=0;
+                        dp[mask][j].sum_biti += dp[mask][j-1].sum_biti;
+                        dp[mask][j].sum_biti += dp[mask][j-1].cnt;
+                        dp[mask][j].sum_biti += dp[opus][j-1].sum_biti;
+                    }
+                }
+            }
+        }
+    }
+    vector<int>inv(k+1,1);
+    for(int i=2;i<=k;i++)
+    {
+        inv[i]=pw2(i , mod-2);
+    }
+
+    for(auto &c:a)
+    {
+        int rez=0,sol=0;
+        for(int i=1;i<=k;i++)
+        {
+            add_self(rez , prod(dp[c][i].sum_biti , inv[i]));
+            add_self(sol , dp[c][i].cnt);
+        }
+        assert(sol==n);
+        cout<<rez<<'\n';
+    }
+}
