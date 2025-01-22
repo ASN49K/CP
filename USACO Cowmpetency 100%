@@ -1,0 +1,96 @@
+#include <bits/stdc++.h>
+#define all(x)  x.begin(),x.end()
+#define pb      push_back
+#define int long long
+using i64=long long;
+const int mod=1e9+7;
+int add(int x,int y)
+{
+    return (x+y)%mod;
+}
+int scad(int x,int y)
+{
+    return (x-y+mod)%mod;
+}
+int prod(int x,int y)
+{
+    return (1LL*x*y)%mod;
+}
+int pw2(int a,int p)
+{
+    int rez=1;
+    while(p>0)
+    {
+        if(p&1)
+        {
+            rez=prod(rez , a);
+        }
+        p>>=1;
+        a=prod(a,a);
+    }
+    return rez;
+}
+main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    int n,q,m;
+    std::cin>>n>>q>>m;
+    std::set<int>blocked;
+    std::vector<int>poz(2*q+2,0);
+    poz[1]=n;
+    std::vector<std::pair<int,int>>a(q);
+    for(int i=1;i<=q;i++)
+    {
+        int x,y;
+        std::cin>>x>>y;
+        a[i-1]={x,y};
+    }
+    std::sort(all(a));
+    for(int i=0;i<q;i++)
+    {
+        if(i==0 || a[i].first>=a[i-1].second)
+        {
+            poz[i*2+2]=a[i].first;
+            poz[i*2+3]=a[i].second;
+            blocked.insert(a[i].second);
+        }
+        //assert(a[i].first>=a[i-1].second);
+    }
+    std::sort(all(poz));
+    poz.erase(unique(all(poz)),poz.end());
+    int poz_size=(int)poz.size();
+    std::vector<std::vector<int>>dp(poz_size,std::vector<int>(m+1,0));
+    dp[0][0]=1;
+    for(int i=1;i<poz_size;i++)
+    {
+        bool blocked_el=blocked.count(poz[i])%2;
+        int cnt=poz[i]-poz[i-1];
+        int sum=0;
+        for(int j=1;j<=m;j++)
+        {
+            if(!blocked_el)
+            {
+                sum=add(sum , dp[i-1][j-1]);
+                dp[i][j]=add(dp[i][j] , prod(dp[i-1][j] , pw2(j,cnt)));
+                dp[i][j]=add(dp[i][j] , prod(sum , scad(pw2(j,cnt),pw2(j-1,cnt))));
+            }
+            else
+            {
+                sum=add(sum , prod(dp[i-1][j-1] , pw2(j-1,cnt-1)));
+                dp[i][j]=add(dp[i][j] , sum);
+            }
+        }
+    }
+    int rez=0;
+    for(int i=1;i<=m;i++)
+    {
+        rez=add(rez , dp[poz_size-1][i]);
+    }
+    std::cout<<rez;
+}
+/*
+3 2 3
+1 3
+2 3
+*/
