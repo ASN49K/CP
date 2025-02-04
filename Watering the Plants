@@ -1,0 +1,146 @@
+#include <bits/stdc++.h>
+using i64=long long;
+#define int long long
+#define UNUSED -1
+#define all(x) x.begin(),x.end()
+#define pb push_back
+const int inf=2e9;
+const i64 INF=1e18;
+
+struct duo
+{
+    int pos,slope;
+};
+signed main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    int n;
+    std::cin>>n;
+    std::vector<int>w(n),cost(n-1);
+    for(auto &c:w)
+    {
+        std::cin>>c;
+    }
+    for(auto &c:cost)
+    {
+        std::cin>>c;
+    }
+
+    std::deque<duo>dq;
+    i64 rez=1LL*std::max(w[0] , w[1])*cost[0];
+    std::cout<<rez<<'\n';
+
+    auto print=[&]()
+    {
+        i64 panta=0;
+        for(auto &c:dq)
+        {
+            panta+=c.slope;
+            std::cout<<c.pos<<' '<<panta<<'\n';
+        }
+    };
+    //pornim de la 2.mda
+    dq.push_back({0,-cost[0]});
+    dq.push_back({std::max(w[1]-w[0],0LL),cost[0]});
+    for(int i=2;i<n;i++)
+    {
+        //adaugam panta de la cost
+        i64 init_sum=0;
+        assert(dq.front().pos==0);
+        dq.front().slope+=cost[i-1];
+        for(auto &c:dq)
+        {
+            init_sum+=c.slope;
+        }
+        //calculam
+        i64 panta=0;
+        for(auto &c:dq)
+        {
+            panta+=c.slope;
+            if(panta>=0)
+            {
+                w[i]=std::max(w[i] , c.pos);
+                break;
+            }
+        }
+        panta=0;
+        for(auto it=dq.begin();;it++)
+        {
+            panta+=(it->slope);
+            if(next(it)==dq.end() || (next(it)->pos)>=w[i])
+            {
+                rez+=(w[i]-it->pos)*panta;
+                break;
+            }
+            rez+=(next(it)->pos-it->pos)*panta;
+        }
+        std::cout<<rez<<'\n';
+
+        //facem minim pe suffix
+        // '<' sau '<='
+        if(dq.front().slope<0)
+        {
+            //ma asigur ca nu incepe sa creasca instant
+            //trebuie sa il fac sa aiba o linie constanta cu dreapta ox(aka derivata e 0)
+            int elim=-dq.front().slope;
+            dq.pop_front();
+            for(auto &c:dq)
+            {
+                assert(c.slope>=0);
+            }
+            while(dq.size() && elim>0)
+            {
+                if(elim>=dq.front().slope)
+                {
+                    elim-=dq.front().slope;
+                    dq.pop_front();
+                }
+                else
+                {
+                    dq.front().slope-=elim;
+                    elim=0;
+                }
+            }
+            for(auto &c:dq)
+            {
+                init_sum-=c.slope;
+            }
+            assert(init_sum==0);
+        }
+        while(dq.size() && dq.back().pos>=w[i])
+        {
+            dq.pop_back();
+        }
+        reverse(all(dq));
+        for(auto &c:dq)
+        {
+            c.pos=w[i]-c.pos;
+        }
+        if(panta<0)
+        {
+            assert(dq.empty());
+        }
+        //dq.push_front({0,std::min(-panta , 0LL)});
+
+
+        if(dq.empty())
+        {
+            //asta cumva da false pe testele 4-6
+            ///assert(panta<=0);
+            dq.push_back({0,0});
+        }
+        else
+        {
+            assert(panta>=0);
+            dq.push_front({0,-panta});
+        }
+
+    }
+    return 0;
+}
+/*
+4
+3 10 7 7
+6 5 6
+*/
