@@ -1,0 +1,96 @@
+#include <bits/stdc++.h>
+#define all(x) x.begin(),x.end()
+using i64=long long;
+const int mod=1e9+7;
+const int inf=1e9;
+///////////////////////////////
+
+int n,m;
+i64 rez=0;
+std::vector<int>root;
+std::vector<int>cnt;
+std::string s;
+std::vector<std::vector<int>>adj;
+int get_root(int x)
+{
+    if(root[x]!=x)
+    {
+        root[x]=get_root(root[x]);
+    }
+    return root[x];
+}
+void unite(int x,int y)
+{
+    x=get_root(x);
+    y=get_root(y);
+    if(x==y)
+    {
+        return;
+    }
+    root[y]=x;
+    rez+=1LL*cnt[x]*cnt[y];
+    cnt[x]+=cnt[y];
+}
+void add_node(int x)
+{
+    x=get_root(x);
+    rez+=cnt[x];
+    cnt[x]++;
+}
+int get_min_moment(int x,int y)
+{
+    if(x>y)
+    {
+        std::swap(x,y);
+    }
+    //x e minimul
+    if(s[x]=='0')
+    {
+        return x;
+    }
+    if(s[y]=='0')
+    {
+        return y;
+    }
+    return inf;
+}
+main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cin>>n>>m>>s;
+    adj.resize(n);
+    cnt.assign(n,0);
+    root.resize(n);
+    std::iota(all(root),0);
+    for(int i=0;i<m;i++)
+    {
+        int x,y;
+        std::cin>>x>>y;
+        x--;
+        y--;
+        adj[x].push_back(y);
+        adj[y].push_back(x);
+        if(get_min_moment(x,y)==inf)
+        {
+            unite(x,y);
+        }
+    }
+    std::vector<i64>sol(n);
+    for(int i=n-1;i>=0;i--)
+    {
+        add_node(i);
+        for(auto& c:adj[i])
+        {
+            if(get_min_moment(i,c)==i)
+            {
+                unite(i,c);
+            }
+        }
+        sol[i]=rez;
+    }
+    for(auto &c:sol)
+    {
+        std::cout<<c<<'\n';
+    }
+}
