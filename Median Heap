@@ -1,0 +1,128 @@
+#include <bits/stdc++.h>
+#define all(x) x.begin(),x.end()
+using i64=long long;
+const int mod=1e9+7;
+const int inf=1e9;
+const i64 INF = 1e18;
+ 
+////////////////////////////////
+ 
+int get_median(int x,int y,int z)
+{
+    int mn=std::min(std::min(x,y),z);
+    int mx=std::max(std::max(x,y),z);
+    return x^y^z^mn^mx;
+}
+struct query
+{
+    int timp,index;
+    i64 rez;
+};
+//indexam de la 1 ca sa ne fie usor
+///////////////////////////////
+int n,q;
+std::vector<int>value,cost;
+std::vector<std::vector<i64>>dp;
+std::vector<query>querys;
+ 
+//the cost to make x to stare in inital form
+int get_cost(int nod,int stare)
+{
+    return cost[nod]*(stare!=value[nod]);
+}
+ 
+void min_self(i64& x,i64 y)
+{
+    if(x>y)
+    {
+        x=y;
+    }
+}
+void recalc_dp(int nod)
+{
+    if(nod*2+1>n)
+    {
+        //frunza
+        for(int j=0;j<3;j++)
+        {
+            dp[nod][j]=get_cost(nod,j);
+        }
+    }
+    else
+    {
+        dp[nod]=(std::vector<i64>){INF,INF,INF};
+        for(int now=0;now<3;now++)
+        {
+            for(int l_son=0;l_son<3;l_son++)
+            {
+                for(int r_son=0;r_son<3;r_son++)
+                {
+                    min_self(dp[nod][get_median(now,l_son,r_son)] , dp[nod*2][l_son]+dp[nod*2+1][r_son]+get_cost(nod,now));
+                }
+            }
+        }
+    }
+}
+void recalc_dp_path(int x)
+{
+    while(x>0)
+    {
+        recalc_dp(x);
+        x/=2;
+    }
+}
+main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cin>>n;
+    value.resize(n+1);
+    cost.resize(n+1);
+    dp=std::vector<std::vector<i64>>(n+1,std::vector<i64>(3));
+ 
+    std::priority_queue<std::pair<int,int>>updates;
+    for(int i=1;i<=n;i++)
+    {
+        std::cin>>value[i]>>cost[i];
+        updates.push({-value[i],i});
+        updates.push({-(value[i]+1),i});
+        value[i]=0;
+    }
+ 
+    int q;
+    std::cin>>q;
+    querys.resize(q);
+    for(int i=0;i<q;i++)
+    {
+        std::cin>>querys[i].timp;
+        querys[i].index=i;
+    }
+    for(int i=n;i>0;i--)
+    {
+        recalc_dp(i);
+    }
+ 
+    std::sort(all(querys) , [&](query a,query b){
+       return a.timp<b.timp;
+    });
+ 
+    for(auto &c:querys)
+    {
+        while(updates.size() && -updates.top().first<=c.timp)
+        {
+            value[updates.top().second]++;
+            recalc_dp_path(updates.top().second);
+            updates.pop();
+        }
+ 
+        c.rez=dp[1][1];
+    }
+ 
+    std::sort(all(querys) , [&](query a,query b){
+       return a.index<b.index;
+    });
+    for(auto &c:querys)
+    {
+        std::cout<<c.rez<<'\n';
+    }
+}
