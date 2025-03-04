@@ -1,0 +1,280 @@
+#include <bits/stdc++.h>
+using i64=long long;
+///#define int long long
+#define UNUSED -1
+#define all(x) x.begin(),x.end()
+#define pb push_back
+const int inf=2e9;
+const i64 INF=1e18;
+///global
+struct duo
+{
+    int a,b;
+};
+int n;
+std::vector<duo>v;
+int cerinta;
+///////////////////////////////////////////////////////////////
+namespace Aint
+{
+    const int MAX_VAL=1e9;
+    int roots[200'001];
+    struct node
+    {
+        i64 sum;
+        int cnt;
+        int l,r;
+    }aint[10'000'000];
+    int sz=1;
+    void clear()
+    {
+        while(sz>1)
+        {
+            sz--;
+            aint[sz]={0,0,0,0};
+        }
+    }
+    void add(int& nod,int st,int dr,int poz)
+    {
+        aint[sz]=aint[nod];
+        nod=sz++;
+        aint[nod].sum+=poz;
+        aint[nod].cnt++;
+        if(st==dr)
+        {
+            return;
+        }
+        int m=(st+dr)/2;
+        if(poz<=m)
+        {
+            add(aint[nod].l,st,m,poz);
+        }
+        else
+        {
+            add(aint[nod].r,m+1,dr,poz);
+        }
+    }
+    i64 query_first_k(int nod,int st,int dr,int k)
+    {
+        if(st==dr)
+        {
+            return k*st;
+        }
+        int m=(st+dr)/2;
+        if(k>=aint[aint[nod].l].cnt)
+        {
+            return aint[aint[nod].l].sum+query_first_k(aint[nod].r,m+1,dr,k-aint[aint[nod].l].cnt);
+        }
+        else
+        {
+            return query_first_k(aint[nod].l,st,m,k);
+        }
+    }
+    void copy(int p)
+    {
+        roots[p]=roots[p-1];
+    }
+    void add(int p,int val)
+    {
+        add(roots[p],1,MAX_VAL,val);
+    }
+    i64 query(int p,int k)
+    {
+        assert(p>=k);
+        return query_first_k(roots[p],1,MAX_VAL,k);
+    }
+}
+std::vector<duo>a;
+std::vector<i64>pref,suff;
+std::vector<i64>rez;
+
+void divide(int l,int r,int optl,int optr)
+{
+    if(l>r)
+    {
+        return;
+    }
+    int mid=(l+r)/2;
+    int optim_now=-1;
+    for(int i=std::max(mid,optl);i<=optr;i++)
+    {
+        if(rez[mid]<suff[i+1]-Aint::query(i,mid))
+        {
+            optim_now=i;
+            rez[mid]=suff[i+1]-Aint::query(i,mid);
+        }
+    }
+    assert(optim_now!=-1);
+    divide(l,mid-1,optl,optim_now);
+    divide(mid+1,r,optim_now,optr);
+}
+int solve()
+{
+    int q=1;
+    //std::cin>>n>>q;
+    pref.assign(n+1,0);
+    suff.assign(n+2,0);
+    rez.assign(n+1,-INF);
+    a=v;
+
+
+
+    std::sort(all(a) , [&](const duo x,const duo y){
+        if(x.a+x.b==y.a+y.b)
+        {
+            return x.a<y.a;
+        }
+        return x.a+x.b>=y.a+y.b;
+    });
+
+    Aint::clear();
+    for(int i=1;i<=n;i++)
+    {
+        Aint::copy(i);
+        Aint::add(i,a[i-1].b);
+    }
+    for(int i=n;i>0;i--)
+    {
+        suff[i]=suff[i+1]+a[i-1].a;
+    }
+    divide(0,n,0,n);
+    while(q--)
+    {
+        int k=cerinta;
+        return rez[k];
+    }
+    return -1;
+}
+
+
+std::mt19937 rng(61'239);
+int range(int l,int r)
+{
+    return l+(rng()%(r-l+1));
+}
+struct first_k_sum
+{
+    int k;
+    i64 sum=0;
+    std::multiset<int>used,non_used;
+    void insert(int x)
+    {
+        used.insert(x);
+        sum+=x;
+        if((int)used.size()>k)
+        {
+            int el=*used.begin();
+            sum-=el;
+            used.erase(used.find(el));
+            non_used.insert(el);
+        }
+    }
+    void erase(int x)
+    {
+        auto it=used.find(x);
+        if(it!=used.end())
+        {
+            sum-=x;
+            used.erase(it);
+            if(non_used.size())
+            {
+                int val=*non_used.rbegin();
+                non_used.erase(non_used.find(val));
+                used.insert(val);
+                sum+=val;
+            }
+        }
+        else
+        {
+            non_used.erase(non_used.find(x));
+        }
+    }
+};
+int solve2()
+{
+    int q=1;
+    //std::cin>>n>>q;
+    pref.assign(n+1,0);
+    suff.assign(n+2,0);
+    a=v;
+    //sortam ca in fata sa fie pierderile mari
+    std::sort(all(a) , [&](duo x,duo y){
+            if(x.b+x.a==y.b+y.a)
+            {
+                return x.a<y.a;
+            }
+        return x.b+x.a>=y.b+y.a;
+    });
+    for(int i=n;i>0;i--)
+    {
+        suff[i]=suff[i+1]+a[i-1].a;
+    }
+    while(q--)
+    {
+        int k=cerinta;
+        i64 result=-INF;
+        first_k_sum ds;
+        ds.k=k;
+        for(int i=0;i<=n;i++)
+        {
+            if(i>0)
+            {
+                ds.insert(-a[i-1].b);
+            }
+            if(i>=k)
+            {
+                //std::cout<<ds.sum<<' ';
+                result=std::max(result , ds.sum+suff[i+1]);
+            }
+        }
+        return result;
+    }
+    assert(false);
+    return -1;
+}
+
+void read()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    int k;
+    std::cin>>n>>k;
+    v=std::vector<duo>(n);
+    for(auto &c:v)
+    {
+        std::cin>>c.a>>c.b;
+    }
+    solve();
+    while(k--)
+    {
+        std::cin>>cerinta;
+        std::cout<<rez[cerinta]<<'\n';
+    }
+}
+signed main()
+{
+    read();
+    return 0;
+    while(true)
+    {
+        std::cout<<"da";
+        n=range(1,20000);
+        v=std::vector<duo>(n);
+        for(auto &c:v)
+        {
+            c.a=range(1,100'000'0000);
+            c.b=range(1,100'000'0000);
+        }
+        cerinta=rng()%(n+1);
+        if(solve()!=solve2())
+        {
+            std::cout<<n<<" 1\n";
+            for(auto &c:a)
+            {
+                std::cout<<c.a<<' '<<c.b<<'\n';
+            }
+            std::cout<<cerinta;
+            break;
+        }
+    }
+}
