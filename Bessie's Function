@@ -1,0 +1,109 @@
+#include <bits/stdc++.h>
+using i64 = long long;
+
+
+
+int n;
+std::vector<int>cost,next;
+std::vector<std::vector<int>>adj;
+std::vector<std::vector<i64>>dp;
+std::vector<bool>viz;
+
+int get_root(int nod)
+{
+    viz[nod]=true;
+    int rez=nod;
+    if(!viz[next[nod]])
+    {
+        rez=get_root(next[nod]);
+    }
+    viz[nod]=false;
+    return rez;
+}
+void mark_comp(int nod)
+{
+    if(viz[nod])
+    {
+        return;
+    }
+    viz[nod]=true;
+    for(auto &c:adj[nod])
+    {
+        mark_comp(c);
+    }
+}
+//rootul o sa fie oblgat sa ia 1
+//oricare 2 vecine din ciclu au
+bool solve_dp(int nod,int root,bool pass)
+{
+    if(nod==root && !pass)
+    {
+        return 0;
+    }
+    dp[nod][0]=0;
+    dp[nod][1]=cost[nod]*(next[nod]!=nod);
+    for(auto &c:adj[nod])
+    {
+        if(solve_dp(c,root,false))
+        {
+            dp[nod][0]+=dp[c][1];
+            dp[nod][1]+=std::min(dp[c][0] , dp[c][1]);
+        }
+    }
+    return 1;
+}
+int main()
+{
+    std::cin>>n;
+    /*if(n==5)
+    {
+        std::cout<<3;
+        return 0;
+    }*/
+    next.resize(n);
+    cost.resize(n);
+    adj.resize(n);
+    dp=std::vector<std::vector<i64>>(n,std::vector<i64>(2,0));
+    viz.resize(n);
+    for(int i=0;i<n;i++)
+    {
+        std::cin>>next[i];
+        next[i]--;
+        if(i!=next[i])
+        {
+            adj[next[i]].push_back(i);
+        }
+    }
+    for(int i=0;i<n;i++)
+    {
+        std::cin>>cost[i];
+    }
+
+    i64 rez=0;
+    for(int i=0;i<n;i++)
+    {
+        if(!viz[i])
+        {
+            int x=get_root(i);
+            mark_comp(x);
+            if(next[x]==x)
+            {
+                solve_dp(x,x,true);
+                rez+=std::min(dp[x][0] , dp[x][1]);
+            }
+            else
+            {
+                i64 minn=1e18;
+                solve_dp(x,x,true);
+                minn=dp[x][1];
+                x=next[x];
+                solve_dp(x,x,true);
+                minn=std::min(minn , dp[x][1]);
+                rez+=minn;
+            }
+        }
+    }
+    std::cout<<rez;
+
+    return 0;
+}
