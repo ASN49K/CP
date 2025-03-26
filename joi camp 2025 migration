@@ -1,0 +1,137 @@
+#include <bits/stdc++.h>
+#include <ext/pb_ds/assoc_container.hpp>
+using namespace __gnu_pbds;
+using i64 = long long;
+#define all(x) x.begin(),x.end()
+//nr de perechi care NU se intersecteaza
+
+
+const int N_MAX=2e6;
+
+
+struct node
+{
+    i64 sum;
+    int l,r;
+}aint[N_MAX*50];
+int sz=1;
+
+void update(int& nod,int st,int dr,int poz,int val)
+{
+    if(nod==0)
+    {
+        nod=sz++;
+    }
+    aint[nod].sum+=val;
+    if(st==dr)
+    {
+        assert(st==poz);
+        return;
+    }
+    int m=(st+dr)/2;
+    if(poz<=m)
+    {
+        update(aint[nod].l , st , m , poz, val);
+    }
+    else
+    {
+        update(aint[nod].r , m+1 , dr , poz , val);
+    }
+}
+i64 query(int nod,int st,int dr,int l,int r)
+{
+    if(st>r || dr<l)
+    {
+        return 0;
+    }
+    if(l<=st && dr<=r)
+    {
+        return aint[nod].sum;
+    }
+    int m=(st+dr)/2;
+    return query(aint[nod].l , st , m ,l , r)+query(aint[nod].r , m+1 , dr , l , r);
+}
+
+//pun tot ce e in r in l
+void merge(int& l,int r,int st,int dr)
+{
+    if(r==0)
+    {
+        return;
+    }
+    if(l==0)
+    {
+        l=r;
+        return;
+    }
+    int m=(st+dr)/2;
+    aint[l].sum+=aint[r].sum;
+    merge(aint[l].l,aint[r].l,st,m);
+    merge(aint[l].r,aint[r].r,m+1,dr);
+}
+
+int n;
+std::vector<int>adj[N_MAX];
+int tin[N_MAX],tout[N_MAX],height[N_MAX],roots[N_MAX];
+
+void dfs(int nod)
+{
+    static int time=-1;
+    tin[nod]=++time;
+    for(auto &c:adj[nod])
+    {
+        height[c]=height[nod]+1;
+        dfs(c);
+    }
+    tout[nod]=time;
+}
+
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cin>>n;
+    for(int i=1;i<n;i++)
+    {
+        int x;
+        std::cin>>x;
+        x--;
+        adj[x].push_back(i);
+    }
+    dfs(0);
+    for(int i=0;i<n;i++)
+    {
+        int x;
+        std::cin>>x;
+        update(roots[height[i]],0,n-1,tin[i],x);
+    }
+
+    int q;
+    std::cin>>q;
+    while(q--)
+    {
+        int cer;
+        std::cin>>cer;
+        if(cer==1)
+        {
+            int r,l;
+            std::cin>>r>>l;
+            merge(roots[l],roots[r],0,n-1);
+            roots[r]=0;
+        }
+        else if(cer==2)
+        {
+            int nod,delta;
+            std::cin>>nod>>delta;
+            nod--;
+            update(roots[height[nod]],0,n-1,tin[nod],delta);
+        }
+        else
+        {
+            int nod;
+            std::cin>>nod;
+            nod--;
+            std::cout<<query(roots[height[nod]],0,n-1,tin[nod],tout[nod])<<'\n';
+        }
+    }
+}
