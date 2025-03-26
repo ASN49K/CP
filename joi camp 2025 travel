@@ -1,0 +1,274 @@
+#include <bits/stdc++.h>
+ 
+using i64 = long long;
+#define all(x) x.begin(),x.end()
+const int LG=20;
+const int MAX_N=300'000;
+int n,m,val;
+std::vector<std::vector<int>>a;
+std::vector<std::array<int,LG+1>>jump;
+struct cord
+{
+    int x,y;
+    int get_val()const
+    {
+        return a[x][y];
+    }
+    bool in()
+    {
+        return x>=0 && x<n && y>=0 && y<m;
+    }
+    bool operator <(cord other)const
+    {
+        if(get_val()==other.get_val())
+        {
+            if(x==other.x)
+            {
+                return y<other.y;
+            }
+            return x<other.x;
+        }
+        return get_val()<other.get_val();
+    }
+    bool operator ==(cord other)const
+    {
+        return x==other.x && y==other.y;
+    }
+    cord operator +(const cord& other)
+    {
+        return {x+other.x,y+other.y};
+    }
+};
+std::vector<cord>movement={
+    {1,0},
+    {-1,0},
+    {0,1},
+    {0,-1}
+};
+int get_hash(cord x)
+{
+    return x.x*m+x.y;
+}
+cord de_hash(int x)
+{
+    return {x/m,x%m};
+}
+ 
+struct dsu
+{
+    std::vector<int>t;
+    std::vector<cord>max_sub;
+    void init()
+    {
+        t.assign(n*m,-1);
+        max_sub=std::vector<cord>(n*m);
+        for(int i=0;i<n;i++)
+        {
+            for(int j=0;j<m;j++)
+            {
+                max_sub[get_hash({i,j})]={i,j};
+            }
+        }
+    }
+    int root(int x)
+    {
+        if(t[x]!=x)
+        {
+            t[x]=root(t[x]);
+        }
+        return t[x];
+    }
+    void init_node(int x)
+    {
+        t[x]=x;
+    }
+    void unite(int x,int y)
+    {
+        if(t[x]==-1 || t[y]==-1)
+        {
+            return;
+        }
+        x=root(x);
+        y=root(y);
+        t[y]=x;
+        max_sub[x]=std::max(max_sub[x] , max_sub[y]);
+    }
+ 
+    cord get_cord(int x)
+    {
+        return max_sub[root(x)];
+    }
+};
+struct dsu2
+{
+    std::vector<int>t;
+    void init()
+    {
+        t.assign(n*m,-1);
+    }
+ 
+    int root(int x)
+    {
+        if(t[x]!=x)
+        {
+            t[x]=root(t[x]);
+        }
+        return t[x];
+    }
+    void init_node(int x)
+    {
+        t[x]=x;
+    }
+    void unite(int x,int y)
+    {
+        if(t[x]==-1 || t[y]==-1)
+        {
+            return;
+        }
+        x=root(x);
+        y=root(y);
+        t[y]=x;
+    }
+    bool connected(int x,int y)
+    {
+        if(t[x]==-1 || t[y]==-1)
+        {
+            return 0;
+        }
+        return root(x)==root(y);
+    }
+};
+ 
+struct query
+{
+    int x,to,rez,try_now;
+    bool predict;
+};
+ 
+std::vector<query>querys;
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cin>>n>>m>>val;
+    a=std::vector<std::vector<int>>(n,std::vector<int>(m));
+    for(auto &v:a)
+    {
+        for(auto &c:v)
+        {
+            std::cin>>c;
+        }
+    }
+ 
+    std::vector<cord>all_(n*m);
+    for(int i=0;i<n;i++)
+    {
+        for(int j=0;j<m;j++)
+        {
+            all_[get_hash({i,j})]={i,j};
+        }
+    }
+    //tb sa inversez
+    std::sort(all(all_));
+ 
+    dsu ds;
+    ds.init();
+    jump.resize(n*m);
+    for(auto l=all_.begin(),r=all_.begin();l!=all_.end();l++)
+    {
+        while(r!=all_.end() && (l->get_val()+val)>=(r->get_val()))
+        {
+            ds.init_node(get_hash(*r));
+            for(auto &v:movement)
+            {
+                auto vecin=(*r)+v;
+                if(vecin.in())
+                {
+                    ds.unite(get_hash(*r) , get_hash(vecin));
+                }
+            }
+            r++;
+        }
+        auto cc=ds.get_cord(get_hash(*l));
+        jump[get_hash(*l)][0]=get_hash(cc);
+ 
+    }
+    for(int i=1;i<=LG;i++)
+    {
+        for(int j=0;j<n*m;j++)
+        {
+            jump[j][i]=jump[jump[j][i-1]][i-1];
+        }
+    }
+ 
+ 
+ 
+    int q;
+    std::cin>>q;
+    while(q--)
+    {
+        int x,y,a,b;
+        std::cin>>a>>b;
+        x=get_hash(cord{a-1,b-1});
+        std::cin>>a>>b;
+        y=get_hash(cord{a-1,b-1});
+        querys.push_back({x,y,0,-1,jump[x][LG]==jump[y][LG]});
+    }
+    q=querys.size();
+    std::vector<int>ord(q);
+    std::iota(all(ord) , 0);
+    for(int i=LG;i>=0;i--)
+    {
+        for(auto &c:querys)
+        {
+            c.try_now=jump[c.x][i];
+        }
+        std::sort(all(ord) , [&](int x,int y){
+           cord now=de_hash(querys[x].try_now);
+           cord other=de_hash(querys[y].try_now);
+           return now<other;
+        });
+        int it=0;
+ 
+        dsu2 ds;
+        ds.init();
+        for(auto &c:all_)
+        {
+            ds.init_node(get_hash(c));
+            for(auto &v:movement)
+            {
+                auto vecin=c+v;
+                if(vecin.in())
+                {
+                    ds.unite(get_hash(c) , get_hash(vecin));
+                }
+            }
+            while(it<q && de_hash(querys[ord[it]].try_now)==c)
+            {
+                query& now_=querys[ord[it]];
+                if(!ds.connected(now_.try_now,now_.to))
+                {
+                    now_.rez+=(1<<i);
+                    now_.x=now_.try_now;
+                }
+                it++;
+            }
+        }
+        assert(it==q);
+    }
+    for(auto &c:querys)
+    {
+        if(c.rez>n*m)
+        {
+            assert(jump[c.x][0]==c.x);
+            std::cout<<-1<<'\n';
+        }
+        else
+        {
+            std::cout<<std::max(c.rez+1,1)<<'\n';
+        }
+ 
+    }
+ 
+ 
+}
