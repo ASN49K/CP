@@ -1,0 +1,163 @@
+#include <bits/stdc++.h>
+const int inf=1e9;
+int lsb(int x)
+{
+    return x&(-x);
+}
+struct node
+{
+    int sum,smin;
+    node(){}
+    node(int x)
+    {
+        sum=smin=x;
+    }
+    node(int x,int y)
+    {
+        sum=x;
+        smin=y;
+    }
+};
+node operator +(node a,node b)
+{
+    return node(a.sum+b.sum , std::min(a.smin , a.sum+b.smin));
+}
+
+struct Aint
+{
+    int n;
+    std::vector<node>aint;
+    void init(int n)
+    {
+        while(n!=lsb(n))
+        {
+            n+=lsb(n);
+        }
+        this->n=n;
+        aint.assign(2*n,{0,0});
+    }
+    void update(int poz,int val)
+    {
+        poz+=n;
+        aint[poz]=node(val);
+        for(poz/=2;poz>0;poz/=2)
+        {
+            aint[poz]=aint[poz<<1]+aint[poz<<1|1];
+        }
+    }
+    node query(int l,int r)
+    {
+        node l_rez,r_rez;
+        l_rez=r_rez={0,inf};
+        for(l+=n,r+=n;l<=r;l/=2,r/=2)
+        {
+            if(l&1)
+            {
+                l_rez=l_rez+aint[l++];
+            }
+            if(!(r&1))
+            {
+                r_rez=aint[r--]+r_rez;
+            }
+        }
+        return l_rez+r_rez;
+    }
+};
+struct query
+{
+    int l,r,it,sum_left,rez;
+};
+
+int n,q,mx_val;
+std::vector<int>a;
+std::vector<std::vector<int>>cnt;
+std::vector<query>querys;
+std::vector<std::vector<int>>poz;
+Aint aint,aint2;
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cin>>n;
+    a.resize(n);
+    for(auto &c:a)
+    {
+        std::cin>>c;
+        mx_val=std::max(mx_val , c);
+    }
+
+
+    cnt=std::vector<std::vector<int>>(mx_val+1,std::vector<int>(n+1));
+
+    for(int i=1;i<=n;i++)
+    {
+        cnt[a[i-1]][i]++;
+        for(int j=1;j<=mx_val;j++)
+        {
+            cnt[j][i]+=cnt[j][i-1];
+        }
+    }
+
+    std::cin>>q;
+    querys.resize(q);
+    for(auto &c:querys)
+    {
+        std::cin>>c.l>>c.r;
+        c.l--;
+        c.r--;
+        c.it=c.l;
+    }
+
+    aint.init(n);
+    aint2.init(n);
+    poz.resize(mx_val+1);
+    for(int i=0;i<n;i++)
+    {
+        aint.update(i,a[i]);
+        aint2.update(i,a[i]);
+        poz[a[i]].push_back(i);
+    }
+    for(int i=1;i<=mx_val;i++)
+    {
+        for(auto &c:poz[i])
+        {
+            aint.update(c,-a[c]);
+        }
+        for(auto &qnow:querys)
+        {
+            if(qnow.it>qnow.r)
+            {
+                continue;
+            }
+            int st=qnow.it,dr=qnow.r,rez=qnow.r+1;
+            while(st<=dr)
+            {
+                int mid=(st+dr)/2;
+                //nevoie de aint 2
+                if(qnow.sum_left+aint2.query(qnow.it,mid-1).sum+aint.query(mid,qnow.r).smin>=0)
+                {
+                    rez=mid;
+                    dr=mid-1;
+                }
+                else
+                {
+                    st=mid+1;
+                }
+            }
+            qnow.sum_left+=aint2.query(qnow.it,rez-1).sum;
+            qnow.it=rez;
+            qnow.rez+=cnt[i][qnow.r+1]-cnt[i][qnow.it];
+        }
+
+        for(auto &c:poz[i])
+        {
+            aint2.update(c,-a[c]);
+        }
+    }
+
+    for(auto &c:querys)
+    {
+        std::cout<<c.rez<<'\n';
+    }
+    return 0;
+}
