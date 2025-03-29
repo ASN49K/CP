@@ -1,0 +1,144 @@
+//ma folosesc de proprietatea ca functia solve e convexa si ca isi schimba panta in putine puncte
+#include <bits/stdc++.h>
+#define all(x) x.begin(),x.end()
+#define int long long
+const int inf=1e9;
+using i64 = long long;
+struct trio
+{
+    i64 start_time , hp , power;
+};
+struct duo
+{
+    int pos;
+    i64 panta;
+};
+
+int n,limit_result;
+i64 timp;
+std::vector<i64>result;
+std::vector<trio>v;
+
+[[gnu::target("avx2")]] [[gnu::optimize("O3")]] i64 solve(int x)
+{
+    if(result[x]!=-1)
+    {
+        return result[x];
+    }
+    result[x]=0;
+    std::priority_queue<std::pair<i64,i64>>pq;
+    for(int i=0;i<n;i++)
+    {
+        auto str=v[i];
+        i64 time_left;
+        if(i!=n-1)
+        {
+            time_left=v[i+1].start_time-v[i].start_time;
+        }
+        else
+        {
+            time_left=timp-str.start_time;
+        }
+        result[x]+=str.power*str.hp*x;
+        pq.push(std::make_pair(str.power , str.hp*x));
+        while(pq.size() && time_left>0)
+        {
+            auto xx=pq.top();
+            pq.pop();
+            i64 cnt=std::min(time_left , xx.second);
+            result[x]-=cnt*xx.first;
+            xx.second-=cnt;
+            time_left-=cnt;
+            if(xx.second>0)
+            {
+                pq.push(xx);
+            }
+        }
+    }
+    return result[x];
+}
+
+double get_panta(int x,int y)
+{
+    return double(solve(y)-solve(x))/(y-x);
+}
+main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cin>>n>>limit_result>>timp;
+    v.resize(n);
+    result.assign(limit_result+1 , -1);
+    for(auto &c:v)
+    {
+        std::cin>>c.start_time>>c.hp>>c.power;
+    }
+    std::sort(all(v) , [&](const trio& a,const trio& b){
+       return a.start_time<b.start_time;
+    });
+
+    //panta
+    std::vector<duo>a;
+    for(int i=0;i<limit_result;)
+    {
+        int st=i+1,dr=limit_result,rez=-1;
+
+        i64 panta_now=solve(i+1)-solve(i);
+        while(st<=dr)
+        {
+            int mid=(st+dr)/2;
+            if(get_panta(i,mid)==panta_now)
+            {
+                rez=mid;
+                st=mid+1;
+            }
+            else
+            {
+                dr=mid-1;
+            }
+        }
+        assert(rez!=-1);
+        a.push_back({i,panta_now});
+        i=rez;
+    }
+    i64 upper=solve(limit_result);
+    int q;
+    std::cin>>q;
+    while(q--)
+    {
+        i64 m;
+        std::cin>>m;
+        if(m>=upper)
+        {
+            std::cout<<limit_result<<'\n';
+            continue;
+        }
+        int st=0,dr=a.size()-1;
+        i64 rez=0;
+        while(st<=dr)
+        {
+            int mid=(st+dr)/2;
+            //std::cerr<<mid<<'x';
+            if(solve(a[mid].pos)<=m)
+            {
+                if(a[mid].panta==0)
+                {
+                    rez=a[mid+1].pos-1;
+                }
+                else
+                {
+                    rez=(m-solve(a[mid].pos))/a[mid].panta+a[mid].pos;
+                }
+                st=mid+1;
+            }
+            else
+            {
+                dr=mid-1;
+            }
+            //std::cerr<<mid<<' ';
+        }
+        assert(rez!=-1);
+        std::cout<<rez<<'\n';
+    }
+    return 0;
+}
